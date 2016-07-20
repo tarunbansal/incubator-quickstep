@@ -842,8 +842,7 @@ void ExecutionGenerator::convertHashJoin(const P::HashJoinPtr &physical_plan) {
   temporary_relation_info_vec_.emplace_back(join_operator_index, output_relation);
 
   // Add heuristics for the Hash Join, if enabled.
-  if (FLAGS_optimize_joins && !skip_hash_join_optimization
-      && build_physical->getPhysicalType() == P::PhysicalType::kSelection) {
+  if (FLAGS_optimize_joins && !skip_hash_join_optimization) {
     execution_heuristics_->addHashJoinInfo(build_operator_index,
                                            join_operator_index,
                                            referenced_stored_build_relation,
@@ -851,6 +850,7 @@ void ExecutionGenerator::convertHashJoin(const P::HashJoinPtr &physical_plan) {
                                            std::move(build_original_attribute_ids),
                                            std::move(probe_original_attribute_ids),
                                            join_hash_table_index,
+                                           build_physical->getPhysicalType() == P::PhysicalType::kSelection,
                                            star_schema_cost_model_->estimateCardinality(build_physical));
   }
 }

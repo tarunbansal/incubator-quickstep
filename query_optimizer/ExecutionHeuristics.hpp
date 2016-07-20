@@ -68,6 +68,7 @@ class ExecutionHeuristics {
                  std::vector<attribute_id> &&build_attributes,
                  std::vector<attribute_id> &&probe_attributes,
                  const QueryContext::join_hash_table_id join_hash_table_id,
+                 const bool is_selection,
                  const std::size_t estimated_build_relation_cardinality)
         : build_operator_index_(build_operator_index),
           join_operator_index_(join_operator_index),
@@ -76,6 +77,7 @@ class ExecutionHeuristics {
           build_attributes_(std::move(build_attributes)),
           probe_attributes_(std::move(probe_attributes)),
           join_hash_table_id_(join_hash_table_id),
+          is_selection_(is_selection),
           estimated_build_relation_cardinality_(estimated_build_relation_cardinality) {
     }
 
@@ -86,6 +88,7 @@ class ExecutionHeuristics {
     const std::vector<attribute_id> build_attributes_;
     const std::vector<attribute_id> probe_attributes_;
     const QueryContext::join_hash_table_id join_hash_table_id_;
+    const bool is_selection_;
     const std::size_t estimated_build_relation_cardinality_;
   };
 
@@ -115,6 +118,7 @@ class ExecutionHeuristics {
                               std::vector<attribute_id> &&build_attributes,
                               std::vector<attribute_id> &&probe_attributes,
                               const QueryContext::join_hash_table_id join_hash_table_id,
+                              const bool is_selection,
                               const std::size_t estimated_build_relation_cardinality) {
     hash_joins_.push_back(HashJoinInfo(build_operator_index,
                                        join_operator_index,
@@ -123,6 +127,7 @@ class ExecutionHeuristics {
                                        std::move(build_attributes),
                                        std::move(probe_attributes),
                                        join_hash_table_id,
+                                       is_selection,
                                        estimated_build_relation_cardinality));
   }
 
