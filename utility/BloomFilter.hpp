@@ -233,8 +233,7 @@ class BloomFilterBlocked {
    */
   inline void insertUnSafe(const std::uint8_t *key_begin, const std::size_t length) {
     Position first_pos = getFirstPosition(key_begin, length);
-    if (!getBitAtPosition(first_pos))
-      setBitAtPosition(first_pos);
+    setBitAtPosition(first_pos);
     Position other_pos;
     for (std::uint8_t i = 1; i <hash_fn_count_; ++i) {
       other_pos = getOtherPosition(key_begin, length, first_pos, i);
