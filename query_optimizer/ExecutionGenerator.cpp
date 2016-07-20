@@ -842,7 +842,8 @@ void ExecutionGenerator::convertHashJoin(const P::HashJoinPtr &physical_plan) {
   temporary_relation_info_vec_.emplace_back(join_operator_index, output_relation);
 
   // Add heuristics for the Hash Join, if enabled.
-  if (FLAGS_optimize_joins && !skip_hash_join_optimization) {
+  if (FLAGS_optimize_joins && !skip_hash_join_optimization
+      && build_physical->getPhysicalType() == P::PhysicalType::kSelection) {
     execution_heuristics_->addHashJoinInfo(build_operator_index,
                                            join_operator_index,
                                            referenced_stored_build_relation,
