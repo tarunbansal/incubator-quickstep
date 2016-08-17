@@ -420,6 +420,7 @@ ColumnVector* AggregationConcreteHandle::finalizeHashTableHelper(
     std::vector<std::vector<TypedValue>> *group_by_keys) const {
   const HandleT &handle = static_cast<const HandleT&>(*this);
   const HashTableT &hash_table_concrete = static_cast<const HashTableT&>(hash_table);
+//  std::cerr << " # " << hash_table_concrete.numEntries() << "\n";
 
   if (group_by_keys->empty()) {
     if (NativeColumnVector::UsableForType(result_type)) {

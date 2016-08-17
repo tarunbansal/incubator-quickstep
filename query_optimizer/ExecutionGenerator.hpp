@@ -426,6 +426,8 @@ class ExecutionGenerator {
 
   physical::TopLevelPlanPtr top_level_physical_plan_;
 
+  std::unordered_map<int, std::size_t> preset_hash_table_size_;
+
   DISALLOW_COPY_AND_ASSIGN(ExecutionGenerator);
 };
 

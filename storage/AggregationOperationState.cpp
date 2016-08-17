@@ -530,6 +530,7 @@ void AggregationOperationState::finalizeSingleState(InsertDestination *output_de
 
     attribute_values.emplace_back(handles_[agg_idx]->finalize(*single_states_[agg_idx]));
   }
+//  std::cerr << " : 1\n";
 
   output_destination->insertTuple(Tuple(std::move(attribute_values)));
 }

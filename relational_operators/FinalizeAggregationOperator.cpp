@@ -41,6 +41,7 @@ bool FinalizeAggregationOperator::getAllWorkOrders(
 
   if (blocking_dependencies_met_ && !started_) {
     started_ = true;
+//    std::cerr << getOperatorIndex();
     container->addNormalWorkOrder(
         new FinalizeAggregationWorkOrder(
             query_id_,

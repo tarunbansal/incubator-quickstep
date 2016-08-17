@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -156,6 +157,9 @@ DEFINE_bool(parallelize_load, true, "Parallelize loading data files.");
 DEFINE_bool(optimize_joins, false,
             "Enable post execution plan generation optimizations for joins.");
 
+DEFINE_string(preset_hash_table_size, "",
+              "Prior knowledge of the hash tables' size. For testing only.");
+
 namespace E = ::quickstep::optimizer::expressions;
 namespace P = ::quickstep::optimizer::physical;
 namespace S = ::quickstep::serialization;
@@ -170,6 +174,17 @@ void ExecutionGenerator::generatePlan(const P::PhysicalPtr &physical_plan) {
       new cost::SimpleCostModel(top_level_physical_plan_->shared_subplans()));
   star_schema_cost_model_.reset(
       new cost::StarSchemaSimpleCostModel(top_level_physical_plan_->shared_subplans()));
+
+  if (!FLAGS_preset_hash_table_size.empty()) {
+    std::string preset_str = FLAGS_preset_hash_table_size;
+    std::replace(preset_str.begin(), preset_str.end(), ',', ' ');
+    std::istringstream cards(preset_str);
+    int op_index;
+    std::size_t hash_table_size;
+    while (cards >> op_index >> hash_table_size) {
+      preset_hash_table_size_.emplace(op_index, hash_table_size);
+    }
+  }
 
   const CatalogRelation *result_relation = nullptr;
 
@@ -739,8 +754,6 @@ void ExecutionGenerator::convertHashJoin(const P::HashJoinPtr &physical_plan) {
         build_relation->getAttributeById(build_attribute)->getType().getProto());
   }
 
-  hash_table_proto->set_estimated_num_entries(build_cardinality);
-
   // Create three operators.
   const QueryPlan::DAGNodeIndex build_operator_index =
       execution_plan_->addRelationalOperator(
@@ -751,6 +764,15 @@ void ExecutionGenerator::convertHashJoin(const P::HashJoinPtr &physical_plan) {
               build_attribute_ids,
               any_build_attributes_nullable,
               join_hash_table_index));
+
+  if (preset_hash_table_size_.empty()) {
+    hash_table_proto->set_estimated_num_entries(build_cardinality);
+  } else {
+    std::cerr << "Set " << build_operator_index
+              << " with " << preset_hash_table_size_.at(build_operator_index) << "\n";
+    hash_table_proto->set_estimated_num_entries(
+      static_cast<std::size_t>(preset_hash_table_size_.at(build_operator_index) * 1.2 + 8));
+  }
 
   // Create InsertDestination proto.
   const CatalogRelation *output_relation = nullptr;

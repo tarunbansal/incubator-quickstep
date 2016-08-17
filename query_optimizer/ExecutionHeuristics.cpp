@@ -84,8 +84,8 @@ void ExecutionHeuristics::optimizeExecutionPlan(QueryPlan *query_plan,
       auto *probe_side_bloom_filter = hash_table_proto->add_probe_side_bloom_filters();
       const auto &probe_side_bf =
           bloom_filter_config.probe_side_bloom_filters[i];
-      std::cerr << "HashJoin probe " << probe_side_bf.attribute->toString()
-                << " @" << probe_side_bf.builder << "\n";
+//      std::cerr << "HashJoin probe " << probe_side_bf.attribute->toString()
+//                << " @" << probe_side_bf.builder << "\n";
 
       const auto &build_side_info =
            bloom_filter_map.at(
@@ -110,8 +110,8 @@ void ExecutionHeuristics::optimizeExecutionPlan(QueryPlan *query_plan,
       auto *bloom_filter = aggregate_proto->add_bloom_filters();
       const auto &bf =
           bloom_filter_config.probe_side_bloom_filters[i];
-      std::cerr << "Aggregate probe " << bf.attribute->toString()
-                << " @" << bf.builder << "\n";
+//      std::cerr << "Aggregate probe " << bf.attribute->toString()
+//                << " @" << bf.builder << "\n";
 
       const auto &build_side_info =
            bloom_filter_map.at(
@@ -134,8 +134,8 @@ void ExecutionHeuristics::optimizeExecutionPlan(QueryPlan *query_plan,
     for (std::size_t i = 0; i < info.bloom_filter_ids_.size(); ++i) {
       const auto &bf =
           bloom_filter_config.probe_side_bloom_filters[i];
-      std::cerr << "Select probe " << bf.attribute->toString()
-                << " @" << bf.builder << "\n";
+//      std::cerr << "Select probe " << bf.attribute->toString()
+//                << " @" << bf.builder << "\n";
 
       const auto &build_side_info =
            bloom_filter_map.at(
