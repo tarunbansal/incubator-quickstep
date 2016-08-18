@@ -169,6 +169,11 @@ class AggregationOperationState {
   int dflag;
 
  private:
+  static constexpr std::size_t kPartitionedAggregateThreshold = 100;
+  static constexpr std::size_t kNumPartitionsForAggregate = 40;
+
+  const bool is_aggregate_partitioned_;
+
   // Merge locally (per storage block) aggregated states with global aggregation
   // states.
   void mergeSingleState(const std::vector<std::unique_ptr<AggregationState>> &local_state);
@@ -216,6 +221,8 @@ class AggregationOperationState {
 
   // A vector of group by hash table pools, one for each group by clause.
   std::vector<std::unique_ptr<HashTablePool>> group_by_hashtable_pools_;
+
+  std::unique_ptr<PartitionedHashTablePool> partitioned_group_by_hashtable_pool_;
 
   StorageManager *storage_manager_;
 
