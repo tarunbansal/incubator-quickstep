@@ -27,6 +27,7 @@
 #include "relational_operators/AggregationOperator.hpp"
 #include "relational_operators/BuildHashOperator.hpp"
 #include "relational_operators/DeleteOperator.hpp"
+#include "relational_operators/DestroyAggregationStateOperator.hpp"
 #include "relational_operators/DestroyHashOperator.hpp"
 #include "relational_operators/DropTableOperator.hpp"
 #include "relational_operators/FinalizeAggregationOperator.hpp"
@@ -111,6 +112,14 @@ WorkOrder* WorkOrderFactory::ReconstructFromProto(const serialization::WorkOrder
           proto.GetExtension(serialization::DeleteWorkOrder::operator_index),
           shiftboss_client_id,
           bus);
+    }
+    case serialization::DESTROY_AGGREGATION_STATE: {
+      LOG(INFO) << "Creating DestroyAggregationStateWorkOrder";
+      return new DestroyAggregationStateWorkOrder(
+          proto.query_id(),
+          proto.GetExtension(
+              serialization::DestroyAggregationStateWorkOrder::aggr_state_index),
+          query_context);
     }
     case serialization::DESTROY_HASH: {
       LOG(INFO) << "Creating DestroyHashWorkOrder";
@@ -468,6 +477,11 @@ bool WorkOrderFactory::ProtoIsValid(const serialization::WorkOrder &proto,
                  proto.GetExtension(serialization::DeleteWorkOrder::predicate_index)) &&
              proto.HasExtension(serialization::DeleteWorkOrder::block_id) &&
              proto.HasExtension(serialization::DeleteWorkOrder::operator_index);
+    }
+    case serialization::DESTROY_AGGREGATION_STATE: {
+      return proto.HasExtension(serialization::DestroyAggregationStateWorkOrder::aggr_state_index) &&
+             query_context.isValidAggregationStateId(
+                 proto.GetExtension(serialization::DestroyAggregationStateWorkOrder::aggr_state_index));
     }
     case serialization::DESTROY_HASH: {
       return proto.HasExtension(serialization::DestroyHashWorkOrder::join_hash_table_index) &&
