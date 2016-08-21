@@ -42,6 +42,7 @@
 #include "query_execution/QueryExecutionTypedefs.hpp"
 #include "query_execution/WorkOrdersContainer.hpp"
 #include "relational_operators/AggregationOperator.hpp"
+#include "relational_operators/DestroyAggregationStateOperator.hpp"
 #include "relational_operators/FinalizeAggregationOperator.hpp"
 #include "relational_operators/WorkOrder.hpp"
 #include "storage/AggregationOperationState.pb.h"
@@ -290,6 +291,9 @@ class AggregationOperatorTest : public ::testing::Test {
                                         *result_table_,
                                         insert_destination_index));
 
+    destroy_aggr_state_op_.reset(
+        new DestroyAggregationStateOperator(kQueryId, aggr_state_index));
+
     // Set up the QueryContext.
     query_context_.reset(new QueryContext(query_context_proto,
                                           *db_,
@@ -302,6 +306,7 @@ class AggregationOperatorTest : public ::testing::Test {
     // class' checks about operator index are successful.
     op_->setOperatorIndex(kOpIndex);
     finalize_op_->setOperatorIndex(kOpIndex);
+    destroy_aggr_state_op_->setOperatorIndex(kOpIndex);
   }
 
   void setupTestGroupBy(const std::string &stem,
@@ -377,6 +382,9 @@ class AggregationOperatorTest : public ::testing::Test {
                                         *result_table_,
                                         insert_destination_index));
 
+    destroy_aggr_state_op_.reset(
+        new DestroyAggregationStateOperator(kQueryId, aggr_state_index));
+
     // Set up the QueryContext.
     query_context_.reset(new QueryContext(query_context_proto,
                                           *db_,
@@ -389,6 +397,7 @@ class AggregationOperatorTest : public ::testing::Test {
     // class' checks about operator index are successful.
     op_->setOperatorIndex(kOpIndex);
     finalize_op_->setOperatorIndex(kOpIndex);
+    destroy_aggr_state_op_->setOperatorIndex(kOpIndex);
   }
 
   void execute() {
@@ -418,6 +427,21 @@ class AggregationOperatorTest : public ::testing::Test {
 
     while (finalize_op_container.hasNormalWorkOrder(finalize_op_index)) {
       WorkOrder *work_order = finalize_op_container.getNormalWorkOrder(finalize_op_index);
+      work_order->execute();
+      delete work_order;
+    }
+
+    destroy_aggr_state_op_->informAllBlockingDependenciesMet();
+
+    WorkOrdersContainer destroy_aggr_state_op_container(1, 0);
+    const std::size_t destroy_aggr_state_op_index = 0;
+    destroy_aggr_state_op_->getAllWorkOrders(&destroy_aggr_state_op_container,
+                                             query_context_.get(),
+                                             storage_manager_.get(),
+                                             foreman_client_id_,
+                                             &bus_);
+    while (destroy_aggr_state_op_container.hasNormalWorkOrder(destroy_aggr_state_op_index)) {
+      WorkOrder *work_order = destroy_aggr_state_op_container.getNormalWorkOrder(destroy_aggr_state_op_index);
       work_order->execute();
       delete work_order;
     }
@@ -526,6 +550,7 @@ class AggregationOperatorTest : public ::testing::Test {
 
   std::unique_ptr<AggregationOperator> op_;
   std::unique_ptr<FinalizeAggregationOperator> finalize_op_;
+  std::unique_ptr<DestroyAggregationStateOperator> destroy_aggr_state_op_;
 };
 
 const char AggregationOperatorTest::kDatabaseName[] = "database";

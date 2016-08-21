@@ -545,6 +545,7 @@ target_link_libraries(AggregationOperator_unittest
                       quickstep_queryexecution_QueryExecutionTypedefs
                       quickstep_queryexecution_WorkOrdersContainer
                       quickstep_relationaloperators_AggregationOperator
+                      quickstep_relationaloperators_DestroyAggregationStateOperator
                       quickstep_relationaloperators_FinalizeAggregationOperator
                       quickstep_relationaloperators_WorkOrder
                       quickstep_storage_AggregationOperationState_proto
