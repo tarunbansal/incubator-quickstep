@@ -20,8 +20,8 @@
 #include <cstddef>
 #include <vector>
 
-#include "utility/Macros.hpp"
 #include "ValueAccessor.hpp"
+#include "utility/Macros.hpp"
 
 namespace quickstep {
 
@@ -54,11 +54,7 @@ struct HashTablePreallocationState {
  * @brief Codes which indicate the result of a call to put() or
  *        putCompositeKey().
  **/
-enum class HashTablePutResult {
-  kOK = 0,
-  kDuplicateKey,
-  kOutOfSpace
-};
+enum class HashTablePutResult { kOK = 0, kDuplicateKey, kOutOfSpace };
 
 /**
  * @brief An ultra-minimal base class that HashTables with different ValueT
@@ -73,16 +69,18 @@ template <bool resizable,
           bool allow_duplicate_keys>
 class HashTableBase {
  public:
-  virtual ~HashTableBase() {
-  }
+  virtual ~HashTableBase() {}
+
   virtual bool upsertValueAccessorCompositeKeyFast(
       const std::vector<std::vector<attribute_id>> &argument,
       ValueAccessor *accessor,
       const std::vector<attribute_id> &key_attr_ids,
-      const bool check_for_null_keys) {return false;}
- protected:
-  HashTableBase() {
+      const bool check_for_null_keys) {
+    return false;
   }
+
+ protected:
+  HashTableBase() {}
 
  private:
   DISALLOW_COPY_AND_ASSIGN(HashTableBase);
