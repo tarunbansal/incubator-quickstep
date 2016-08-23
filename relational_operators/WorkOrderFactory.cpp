@@ -30,6 +30,7 @@
 #include "relational_operators/AggregationOperator.hpp"
 #include "relational_operators/BuildHashOperator.hpp"
 #include "relational_operators/DeleteOperator.hpp"
+#include "relational_operators/DestroyAggregationStateOperator.hpp"
 #include "relational_operators/DestroyHashOperator.hpp"
 #include "relational_operators/DropTableOperator.hpp"
 #include "relational_operators/FinalizeAggregationOperator.hpp"
@@ -46,7 +47,6 @@
 #include "relational_operators/TableGeneratorOperator.hpp"
 #include "relational_operators/TextScanOperator.hpp"
 #include "relational_operators/UpdateOperator.hpp"
-#include "relational_operators/WindowAggregationOperator.hpp"
 #include "relational_operators/WorkOrder.pb.h"
 #include "storage/StorageBlockInfo.hpp"
 
@@ -115,6 +115,14 @@ WorkOrder* WorkOrderFactory::ReconstructFromProto(const serialization::WorkOrder
           proto.GetExtension(serialization::DeleteWorkOrder::operator_index),
           shiftboss_client_id,
           bus);
+    }
+    case serialization::DESTROY_AGGREGATION_STATE: {
+      LOG(INFO) << "Creating DestroyAggregationStateWorkOrder";
+      return new DestroyAggregationStateWorkOrder(
+          proto.query_id(),
+          proto.GetExtension(
+              serialization::DestroyAggregationStateWorkOrder::aggr_state_index),
+          query_context);
     }
     case serialization::DESTROY_HASH: {
       LOG(INFO) << "Creating DestroyHashWorkOrder";
@@ -420,22 +428,6 @@ WorkOrder* WorkOrderFactory::ReconstructFromProto(const serialization::WorkOrder
           shiftboss_client_id,
           bus);
     }
-    case serialization::WINDOW_AGGREGATION: {
-      LOG(INFO) << "Creating WindowAggregationWorkOrder";
-      vector<block_id> blocks;
-      for (int i = 0; i < proto.ExtensionSize(serialization::WindowAggregationWorkOrder::block_ids); ++i) {
-        blocks.push_back(
-            proto.GetExtension(serialization::WindowAggregationWorkOrder::block_ids, i));
-      }
-
-      return new WindowAggregationWorkOrder(
-          proto.query_id(),
-          query_context->getWindowAggregationState(
-              proto.GetExtension(serialization::WindowAggregationWorkOrder::window_aggr_state_index)),
-          move(blocks),
-          query_context->getInsertDestination(
-              proto.GetExtension(serialization::WindowAggregationWorkOrder::insert_destination_index)));
-    }
     default:
       LOG(FATAL) << "Unknown WorkOrder Type in WorkOrderFactory::ReconstructFromProto";
   }
@@ -489,6 +481,11 @@ bool WorkOrderFactory::ProtoIsValid(const serialization::WorkOrder &proto,
              proto.HasExtension(serialization::DeleteWorkOrder::block_id) &&
              proto.HasExtension(serialization::DeleteWorkOrder::operator_index);
     }
+    case serialization::DESTROY_AGGREGATION_STATE: {
+      return proto.HasExtension(serialization::DestroyAggregationStateWorkOrder::aggr_state_index) &&
+             query_context.isValidAggregationStateId(
+                 proto.GetExtension(serialization::DestroyAggregationStateWorkOrder::aggr_state_index));
+    }
     case serialization::DESTROY_HASH: {
       return proto.HasExtension(serialization::DestroyHashWorkOrder::join_hash_table_index) &&
              query_context.isValidJoinHashTableId(
@@ -533,11 +530,13 @@ bool WorkOrderFactory::ProtoIsValid(const serialization::WorkOrder &proto,
         return false;
       }
 
+      const CatalogRelationSchema &build_relation = catalog_database.getRelationSchemaById(build_relation_id);
       const CatalogRelationSchema &probe_relation = catalog_database.getRelationSchemaById(probe_relation_id);
       for (int i = 0; i < proto.ExtensionSize(serialization::HashJoinWorkOrder::join_key_attributes); ++i) {
         const attribute_id attr_id =
             proto.GetExtension(serialization::HashJoinWorkOrder::join_key_attributes, i);
-        if (!probe_relation.hasAttributeWithId(attr_id)) {
+        if (!build_relation.hasAttributeWithId(attr_id) ||
+            !probe_relation.hasAttributeWithId(attr_id)) {
           return false;
         }
       }
@@ -711,14 +710,6 @@ bool WorkOrderFactory::ProtoIsValid(const serialization::WorkOrder &proto,
                  proto.GetExtension(serialization::UpdateWorkOrder::update_group_index)) &&
              proto.HasExtension(serialization::UpdateWorkOrder::operator_index) &&
              proto.HasExtension(serialization::UpdateWorkOrder::block_id);
-    }
-    case serialization::WINDOW_AGGREGATION: {
-      return proto.HasExtension(serialization::WindowAggregationWorkOrder::window_aggr_state_index) &&
-             query_context.isValidWindowAggregationStateId(
-                 proto.GetExtension(serialization::WindowAggregationWorkOrder::window_aggr_state_index)) &&
-             proto.HasExtension(serialization::WindowAggregationWorkOrder::insert_destination_index) &&
-             query_context.isValidInsertDestinationId(
-                 proto.GetExtension(serialization::WindowAggregationWorkOrder::insert_destination_index));
     }
     default:
       return false;
