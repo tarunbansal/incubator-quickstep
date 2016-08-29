@@ -2148,7 +2148,7 @@ name
 ,relation=,type=Float]
 ==
 
-select date '1998-12-12' + interval '5 day',
+select datetime '1998-12-12' + interval '5 day',
        date '1998-12-12' - interval '5 month',
        interval '5 year' + date '1998-12-12',
        date '1998-12-12' - date '1998-12-11',
@@ -2173,10 +2173,10 @@ TopLevelPlan
 |   |   +-Literal[value=1998-12-12T00:00:00,type=Datetime]
 |   |   +-Literal[value=5 days 00:00:00,type=DatetimeInterval]
 |   +-Alias[id=7,name=,
-|   | alias=(Datetime('1998-12-12')-YearMonthInterval('5 month')),relation=,
-|   | type=Datetime]
+|   | alias=(Date('1998-12-12')-YearMonthInterval('5 month')),relation=,
+|   | type=Date]
 |   | +-Subtract
-|   |   +-Literal[value=1998-12-12T00:00:00,type=Datetime]
+|   |   +-Literal[value=1998-12-12,type=Date]
 |   |   +-Literal[value=5 mons,type=YearMonthInterval]
 |   +-Alias[id=8,name=,
 |   | alias=(YearMonthInterval('5 year')+Datetime('1998-12-12')),relation=,
@@ -2445,24 +2445,48 @@ select interval '4 day' + interval '5 year'
 select date '1998-12-12' + date '1998-12-12'
 from test
 --
-ERROR: Can not apply binary operation "Add" to arguments of types Datetime and Datetime (1 : 26)
+ERROR: Can not apply binary operation "Add" to arguments of types Date and Date (1 : 26)
 select date '1998-12-12' + date '1998-12-12'
                          ^
 ==
 
+select datetime '1998-12-12' + datetime '1998-12-12'
+from test
+--
+ERROR: Can not apply binary operation "Add" to arguments of types Datetime and Datetime (1 : 30)
+select datetime '1998-12-12' + datetime '1998-12-12'
+                             ^
+==
+
 select date '1998-12-12' * date '1998-12-12'
 from test
 --
-ERROR: Can not apply binary operation "Multiply" to arguments of types Datetime and Datetime (1 : 26)
+ERROR: Can not apply binary operation "Multiply" to arguments of types Date and Date (1 : 26)
 select date '1998-12-12' * date '1998-12-12'
                          ^
+==
+
+select datetime '1998-12-12' * datetime '1998-12-12'
+from test
+--
+ERROR: Can not apply binary operation "Multiply" to arguments of types Datetime and Datetime (1 : 30)
+select datetime '1998-12-12' * datetime '1998-12-12'
+                             ^
 ==
 
 select interval '5 day' - date '1998-12-12'
 from test
 --
-ERROR: Can not apply binary operation "Subtract" to arguments of types DatetimeInterval and Datetime (1 : 25)
+ERROR: Can not apply binary operation "Subtract" to arguments of types DatetimeInterval and Date (1 : 25)
 select interval '5 day' - date '1998-12-12'
+                        ^
+==
+
+select interval '5 day' - datetime '1998-12-12'
+from test
+--
+ERROR: Can not apply binary operation "Subtract" to arguments of types DatetimeInterval and Datetime (1 : 25)
+select interval '5 day' - datetime '1998-12-12'
                         ^
 ==
 

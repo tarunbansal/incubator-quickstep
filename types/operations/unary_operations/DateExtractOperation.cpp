@@ -265,7 +265,7 @@ std::string DateExtractOperation::getName() const {
 }
 
 const Type* DateExtractOperation::pushDownTypeHint(const Type *type_hint) const {
-  if (type_hint == nullptr) {
+  /*if (type_hint == nullptr) {
     return nullptr;
   }
 
@@ -273,7 +273,8 @@ const Type* DateExtractOperation::pushDownTypeHint(const Type *type_hint) const 
     return &TypeFactory::GetType(kDatetime, type_hint->isNullable());
   } else {
     return nullptr;
-  }
+  }*/
+  return nullptr;
 }
 
 TypedValue DateExtractOperation::applyToChecked(const TypedValue &argument,
